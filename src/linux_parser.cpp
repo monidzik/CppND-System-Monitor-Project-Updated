@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include <iostream>
 #include "linux_parser.h"
 
 using std::stof;
@@ -111,28 +110,17 @@ long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
-  vector<string> cpu_usages{};
+  vector<string> cpu_usages;
   std::ifstream stream(kProcDirectory + kStatFilename);
-  string line, name, user, nice, system, idle, iowait, irq, softirq, steal;
-  if (stream.is_open()) {
-    int i = 0;
-    while (std::getline(stream, line)) {
-      float total_cpu_time_since_boot = 0;
-      float total_cpu_idle_time_since_boot = 0;
-      float total_cpu_usage_since_boot = 0;
-      std::istringstream linestream(line);
-      linestream >> name >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal;
-      if (i > 11){
-        break;
+  string line, value;
+  if(stream.is_open()){
+    std::istringstream linestream(line);
+    while (linestream >> value) {
+      if (value == "cpu") {
+        while (linestream >> value) {
+          cpu_usages.push_back(value);
+        }
       }
-      i++;
-      total_cpu_time_since_boot = stoi(user) + stoi(nice) + stoi(system) + stoi(idle) + stoi
-          (iowait) + stoi(irq) + stoi(softirq) + stoi(steal);
-      total_cpu_idle_time_since_boot =stoi(idle) + stoi(iowait);
-      total_cpu_usage_since_boot = total_cpu_time_since_boot - total_cpu_idle_time_since_boot;
-      string total_cpu_usage =
-          to_string(total_cpu_usage_since_boot / total_cpu_time_since_boot * 100) + "%";
-      cpu_usages.push_back(total_cpu_usage);
     }
   }
   return cpu_usages;
@@ -147,7 +135,6 @@ int LinuxParser::TotalProcesses() {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "processes") {
-          std::cout << stoi(value) << std::endl;
           return stoi(value);
         }
       }
