@@ -19,8 +19,17 @@ Processor& System::Cpu() { return cpu_; }
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() {
   vector<int> pids = LinuxParser::Pids();
+  // Assuiming <set> is included I create a set
+  set<int> pids_set;
+  for (Process & p : processes_) {
+    pids_set.insert(p.Pid());
+  }
   for (auto i : pids) {
-    processes_.push_back(*(new Process(i)));
+    if (pids_set.find(i) == pids_set.end())
+      processes_.emplace_back(i);
+  }
+  for (auto& p : processes_) {
+    p.CpuUtilization(LinuxParser::ActiveJiffies(p.Pid()), LinuxParser::Jiffies());
   }
   return processes_;
 }
