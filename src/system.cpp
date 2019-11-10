@@ -31,6 +31,7 @@ vector<Process>& System::Processes() {
   for (auto& p : processes_) {
     p.CpuUtilization(LinuxParser::ActiveJiffies(p.Pid()), LinuxParser::Jiffies());
   }
+  std::sort(processes_.begin(), processes_.end(),std::greater<Process>());
   return processes_;
 }
 
